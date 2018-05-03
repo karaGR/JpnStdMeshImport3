@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QLineEdit,QPushButton,QSpinBox,QComboBox
 from PyQt5.QtWidgets import QMessageBox, QTableView
 from PyQt5.QtGui import QStandardItemModel,QStandardItem
 
-from PyQt5.QtCore import QUrl
+from PyQt5.QtCore import QUrl,QUrlQuery
 QString = str
 
 from qgis._gui import QgsEncodingFileDialog
@@ -245,7 +245,7 @@ class dlg_main(QDialog):
         self.outfile_qstr = self.LiE_selectfile.text().replace(".","_wkt.")
 
         in_fp = open(infile_qstr,"r")
-        out_fp = open(self.outfile_qstr,"wb")
+        out_fp = open(self.outfile_qstr,"w")
         reader = csv.reader(in_fp)
         writer = csv.writer(out_fp)
 
@@ -267,23 +267,26 @@ class dlg_main(QDialog):
         out_fp.close()
 
     def load_wkt_csv(self):
-        uri = QUrl.fromLocalFile(self.outfile_qstr)
-        uri.addQueryItem("type","csv")
-        uri.addQueryItem("delimiter",",")
-        uri.addQueryItem("wktField","1")
-        uri.addQueryItem("encoding",self.EF_dia.encoding())
+        url = QUrl.fromLocalFile(self.outfile_qstr)
+
+        q = QUrlQuery()
+        q.addQueryItem("type","csv")
+        q.addQueryItem("delimiter",",")
+        q.addQueryItem("wktField","1")
+        q.addQueryItem("encoding",self.EF_dia.encoding())
 
         if self.ChB_recopt.checkState() == 2:
-            uri.addQueryItem("useHeader","yes")
+            q.addQueryItem("useHeader","yes")
         else:
-            uri.addQueryItem("useHeader","no")
+            q.addQueryItem("useHeader","no")
 
         if self.CoB_crs.currentIndex() == 0:
-            uri.addQueryItem("crs","EPSG:4612")
+            q.addQueryItem("crs","EPSG:4612")
         elif self.CoB_crs.currentIndex() == 0:
-            uri.addQueryItem("crs","EPSG:4301")
+            q.addQueryItem("crs","EPSG:4301")
 
-        self.vlayer = QgsVectorLayer(uri.toString(),self.LiE_layername.text(),"delimitedtext")
+        url.setQuery(q)
+        self.vlayer = QgsVectorLayer(url.toString(),self.LiE_layername.text(),"delimitedtext")
 
         if self.vlayer.isValid():
             QgsProject.instance().addMapLayer( self.vlayer )
@@ -332,7 +335,7 @@ class myFileDialog(QgsEncodingFileDialog):
         self.p_wid.clear()
 
         try:
-            dat_str = np.genfromtxt(self.filename,delimiter=",",dtype=np.str)
+            dat_str = np.genfromtxt(self.filename,delimiter=",",dtype="S20")
             self.p_wid.dat_str = def_c.decode(dat_str,encoding=self.f_enc)
             self.p_wid.LiE_selectfile.setText(self.filename)
             self.p_wid.update_csv_str()
