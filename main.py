@@ -260,7 +260,7 @@ class dlg_main(QDialog):
             writer.writerow(header)
 
         for hrow in csv.reader(in_fp):
-            hrow.insert(0,m_wkt.res_wkt(hrow[0]))
+            hrow.insert(0,m_wkt.res_wkt(hrow[self.CoB_mesh_field.currentIndex()]))
             writer.writerow(hrow)
 
         in_fp.close()
